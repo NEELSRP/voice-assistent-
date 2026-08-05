@@ -1,0 +1,270 @@
+/* ---------------------------------------------------
+   Token system — "N.O.V.A." holographic HUD
+   bg: #04070A   grid/line: #0E2430   panel: rgba(6,18,24,0.55)
+   ink: #D8F6FF   ink-dim: #4E7A88
+   cyan: #00E5FF (primary)   amber: #FFB454 (speaking / alert)
+   display: Orbitron (headers, labels)   data: Share Tech Mono
+--------------------------------------------------- */
+
+:root {
+  --bg: #04070A;
+  --panel: rgba(6, 20, 26, 0.55);
+  --line: #123540;
+  --ink: #D8F6FF;
+  --ink-dim: #4E7A88;
+
+  --idle: #1C7A8C;
+  --listening: #00E5FF;
+  --speaking: #FFB454;
+
+  --state: var(--idle);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Share Tech Mono", monospace;
+  overflow-x: hidden;
+}
+
+#bgCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  padding: 28px 16px 60px;
+}
+
+/* ---------------- HUD frame ---------------- */
+
+.hud-frame {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 480px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  backdrop-filter: blur(10px);
+  padding: 18px 22px 30px;
+  box-shadow: 0 0 0 1px rgba(0,229,255,0.04), 0 30px 80px -30px rgba(0,0,0,0.8);
+}
+
+.corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--state);
+  opacity: 0.85;
+  transition: border-color 0.4s ease;
+}
+.corner.tl { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+.corner.tr { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+.corner.bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
+.corner.br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+.hud-topline {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--ink-dim);
+  letter-spacing: 0.05em;
+  margin-bottom: 26px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.hud-tag b {
+  color: var(--state);
+  font-weight: 400;
+  transition: color 0.4s ease;
+}
+
+/* ---------------- Hero ---------------- */
+
+.stage { text-align: center; }
+
+.eyebrow {
+  margin: 0 0 4px;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.headline {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  font-size: 44px;
+  letter-spacing: 0.06em;
+  margin: 0 0 6px;
+  color: var(--ink);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--state) 55%, transparent);
+  transition: text-shadow 0.4s ease;
+}
+
+.tagline {
+  margin: 0 0 34px;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+}
+
+/* ---------------- Orb ---------------- */
+
+.orb-wrap {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: 0 auto;
+}
+
+#orbCanvas {
+  position: absolute;
+  inset: 0;
+  width: 300px;
+  height: 300px;
+}
+
+#micBtn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 1px solid var(--state);
+  background: rgba(4, 10, 12, 0.7);
+  color: var(--state);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.3s ease, transform 0.15s ease;
+  box-shadow: 0 0 22px color-mix(in srgb, var(--state) 45%, transparent);
+}
+
+#micBtn:hover { transform: translate(-50%, -50%) scale(1.05); }
+#micBtn:active { transform: translate(-50%, -50%) scale(0.97); }
+#micBtn.active {
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--state) 14%, transparent),
+              0 0 30px color-mix(in srgb, var(--state) 60%, transparent);
+}
+
+.status {
+  margin: 20px 0 0;
+  font-size: 13px;
+  color: var(--ink-dim);
+  min-height: 18px;
+  letter-spacing: 0.03em;
+}
+
+/* ---------------- Conversation log ---------------- */
+
+.log {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.bubble {
+  padding: 10px 14px;
+  border-radius: 3px;
+  font-size: 13px;
+  line-height: 1.55;
+  max-width: 88%;
+  animation: rise 0.3s ease;
+  border-left: 2px solid var(--line);
+}
+
+.bubble.user {
+  align-self: flex-end;
+  background: rgba(255,255,255,0.03);
+  color: var(--ink);
+  border-left-color: var(--ink-dim);
+}
+
+.bubble.echo {
+  align-self: flex-start;
+  background: rgba(0, 229, 255, 0.05);
+  border-left-color: var(--state);
+  color: var(--ink);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------------- Command reference ---------------- */
+
+.commands {
+  margin-top: 30px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.commands-title {
+  font-family: "Orbitron", sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin: 0 0 12px;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.chip {
+  font-size: 11px;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  color: var(--ink-dim);
+  border-radius: 2px;
+}
+
+.footnote {
+  margin-top: 22px;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  color: var(--ink-dim);
+  opacity: 0.6;
+}
+
+/* ---------------- Motion & a11y ---------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+:focus-visible {
+  outline: 2px solid var(--listening);
+  outline-offset: 3px;
+}
+
+@media (max-width: 380px) {
+  .headline { font-size: 34px; }
+  .orb-wrap { width: 240px; height: 240px; }
+  #orbCanvas { width: 240px; height: 240px; }
+}
